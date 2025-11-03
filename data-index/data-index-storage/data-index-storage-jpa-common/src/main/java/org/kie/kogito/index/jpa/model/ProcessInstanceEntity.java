@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
 import org.kie.kogito.persistence.postgresql.hibernate.JsonBinaryConverter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -45,6 +47,10 @@ import jakarta.persistence.Table;
 
 @Entity(name = "processes")
 @Table(name = "processes")
+@SecondaryTable(
+        name = "process_tenant_map",
+        pkJoinColumns = @PrimaryKeyJoinColumn(name = "process_id", referencedColumnName = "id")
+)
 public class ProcessInstanceEntity extends AbstractEntity {
 
     @Id
@@ -92,6 +98,17 @@ public class ProcessInstanceEntity extends AbstractEntity {
     @JoinColumns({ @JoinColumn(name = "processId", referencedColumnName = "id", insertable = false, updatable = false),
             @JoinColumn(name = "version", referencedColumnName = "version", insertable = false, updatable = false) })
     private ProcessDefinitionEntity definition;
+
+    @Column(table = "process_tenant_map", name = "tenant_id", nullable = true)
+    private String tenantId;
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
 
     @Override
     public String getId() {
