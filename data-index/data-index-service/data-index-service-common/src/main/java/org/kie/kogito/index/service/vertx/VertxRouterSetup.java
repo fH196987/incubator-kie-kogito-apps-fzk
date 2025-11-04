@@ -56,6 +56,8 @@ public class VertxRouterSetup {
     void setupRouter(@Observes Router router) {
         router.route().handler(LoggerHandler.create());
         router.route("/graphql").handler(new TenantInjectionHandler());
+        router.post("/graphql*").handler(new TenantInjectionHandler());
+        router.get("/graphql*").handler(new TenantInjectionHandler());
         GraphiQLHandler graphiQLHandler = GraphiQLHandler.create(new GraphiQLHandlerOptions().setEnabled(true));
         if (Boolean.TRUE.equals(authEnabled)) {
             addGraphiqlRequestHeader(graphiQLHandler);

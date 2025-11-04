@@ -57,6 +57,7 @@ public class BlockingGraphqlRouterProducer {
 
     @Route(path = "/graphql", type = Route.HandlerType.BLOCKING, order = 1, methods = { POST })
     public void blockingApolloWSHandlerPost(RoutingContext rc) {
+        new TenantFilter().add(rc);
         apolloWSHandler.handle(rc);
     }
 

@@ -1,6 +1,5 @@
-package org.kie.kogito.index.service.vertx;
+package org.kie.kogito.index.vertx;
 
-import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -11,12 +10,11 @@ import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TenantInjectionHandler implements Handler<RoutingContext> {
+public class TenantFilter {
 
-    Logger logger = Logger.getLogger(TenantInjectionHandler.class.getName());
+    Logger logger = Logger.getLogger(TenantFilter.class.getName());
 
-    @Override
-    public void handle(RoutingContext rc) {
+    public void add(RoutingContext rc) {
 
         logger.log(Level.FINE, "[TenantHandler] Handler triggered for path: "+ rc.request().path());
 
