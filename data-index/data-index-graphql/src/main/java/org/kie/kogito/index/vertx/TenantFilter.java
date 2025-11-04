@@ -48,12 +48,25 @@ public class TenantFilter {
     }
 
     private String extractTenantId(RoutingContext rc) {
-        if (rc.user() instanceof QuarkusHttpUser quarkusUser) {
+        /*if (rc.user() instanceof QuarkusHttpUser quarkusUser) {
             var identity = quarkusUser.getSecurityIdentity();
             var token = identity.getCredential(AccessTokenCredential.class).getToken();
             return parseTenantIdFromJwt(token);
+        }*/
+
+        String tenant = "HAL01";
+
+        String token = rc.request().getHeader("Authorization");
+        try {
+            tenant = new String(
+                    java.util.Base64.getUrlDecoder().decode(token.substring(7).split("\\.")[1]),
+                    java.nio.charset.StandardCharsets.UTF_8
+            ).replaceAll(".*\"tenants\":\\[\"([^\"]+)\"\\].*", "$1").split(",")[0];
+
+        } catch (Exception e) {
+            // TODO: handle exception
         }
-        return "defaultTenant";
+        return tenant;
     }
 
     private String parseTenantIdFromJwt(String jwt) {
