@@ -18,41 +18,33 @@ public class TenantFilter {
 
         logger.log(Level.FINE, "[TenantHandler] Handler triggered for path: "+ rc.request().path());
 
-        // Get already-buffered body as string
-        rc.request().body().onSuccess(buffer -> {
-            try {
-                JsonObject body = buffer.toJsonObject();
+        try {
+            JsonObject body = rc.body().asJsonObject();
 
-                if (body == null) {
-                    rc.next();
-                    return;
-                }
-
-                // Extract tenant ID from JWT
-                String tenantId = extractTenantId(rc);
-
-                // Inject tenant ID into GraphQL variables.where
-                if (body.containsKey("variables")) {
-                    JsonObject variables = body.getJsonObject("variables");
-                    JsonObject where = variables.getJsonObject("where", new JsonObject());
-                    where.put("tenantId", tenantId);
-                    variables.put("where", where);
-                    body.put("variables", variables);
-
-                    // Replace the body buffer with modified JSON
-                    rc.setBody(Buffer.buffer(body.encode()));
-                }
-
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Failed to inject tenant ID: " + e.getMessage(), e);
+            if (body == null) {
+                rc.next();
+                return;
             }
 
-            // Continue the routing chain
-            rc.next();
-        }).onFailure(err -> {
-            logger.log(Level.WARNING, "Failed to inject tenant ID: " + err.getMessage(), err);
-            rc.next();
-        });
+            // Extract tenant ID from JWT
+            String tenantId = extractTenantId(rc);
+
+            // Inject tenant ID into GraphQL variables.where
+            if (body.containsKey("variables")) {
+                JsonObject variables = body.getJsonObject("variables");
+                JsonObject where = variables.getJsonObject("where", new JsonObject());
+                where.put("tenantId", tenantId);
+                variables.put("where", where);
+                body.put("variables", variables);
+
+                // Replace the body buffer with modified JSON
+                rc.setBody(Buffer.buffer(body.encode()));
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to inject tenant ID: " + e.getMessage(), e);
+        }
+
     }
 
     private String extractTenantId(RoutingContext rc) {
