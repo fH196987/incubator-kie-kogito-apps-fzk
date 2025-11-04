@@ -329,6 +329,7 @@ public class ProcessInstanceEntity extends AbstractEntity {
                 ", addons=" + addons +
                 ", error=" + error +
                 ", version=" + version +
+                ", tenantId= " + tenantId  +
                 '}';
     }
 }

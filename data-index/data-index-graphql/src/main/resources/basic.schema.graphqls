@@ -103,6 +103,7 @@ type ProcessInstance {
     updatedBy: String
     executionSummary: [String]
     slaDueDate: DateTime
+    tenantId: String
 }
 
 type ProcessInstanceError {
@@ -203,6 +204,7 @@ input ProcessInstanceArgument {
     createdBy: StringArgument
     updatedBy: StringArgument
     definition: ProcessDefinitionArgument
+    tenantId: StringArgument
 }
 
 input ProcessInstanceErrorArgument {
