@@ -3,16 +3,15 @@ package org.kie.kogito.index.vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import io.quarkus.oidc.AccessTokenCredential;
 import io.quarkus.vertx.http.runtime.security.QuarkusHttpUser;
 
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TenantFilter {
+public class RequestFilters {
 
-    Logger logger = Logger.getLogger(TenantFilter.class.getName());
+    Logger logger = Logger.getLogger(RequestFilters.class.getName());
 
     public void add(RoutingContext rc) {
 
@@ -22,18 +21,23 @@ public class TenantFilter {
             JsonObject body = rc.body().asJsonObject();
 
             if (body == null) {
-                rc.next();
                 return;
             }
 
             // Extract tenant ID from JWT
             String tenantId = extractTenantId(rc);
 
+            if(tenantId == null){
+                return;
+            }
+
             // Inject tenant ID into GraphQL variables.where
             if (body.containsKey("variables")) {
                 JsonObject variables = body.getJsonObject("variables");
                 JsonObject where = variables.getJsonObject("where", new JsonObject());
-                where.put("tenantId", tenantId);
+                JsonObject tenantObject = new JsonObject();
+                tenantObject.put("EQUALS", tenantId);
+                where.put("tenantId", tenantObject);
                 variables.put("where", where);
                 body.put("variables", variables);
 
@@ -48,25 +52,16 @@ public class TenantFilter {
     }
 
     private String extractTenantId(RoutingContext rc) {
-        /*if (rc.user() instanceof QuarkusHttpUser quarkusUser) {
-            var identity = quarkusUser.getSecurityIdentity();
-            var token = identity.getCredential(AccessTokenCredential.class).getToken();
-            return parseTenantIdFromJwt(token);
-        }*/
-
-        String tenant = "HAL01";
-
-        String token = rc.request().getHeader("Authorization");
         try {
-            tenant = new String(
-                    java.util.Base64.getUrlDecoder().decode(token.substring(7).split("\\.")[1]),
-                    java.nio.charset.StandardCharsets.UTF_8
-            ).replaceAll(".*\"tenants\":\\[\"([^\"]+)\"\\].*", "$1").split(",")[0];
-
+            if (rc.user() instanceof QuarkusHttpUser) {
+                var token = rc.request().getHeader("Authorization");
+                return parseTenantIdFromJwt(token);
+            }
         } catch (Exception e) {
-            // TODO: handle exception
+            logger.log(Level.WARNING, "Failed to extract tenant ID: " + e.getMessage(), e);
         }
-        return tenant;
+
+        return null;
     }
 
     private String parseTenantIdFromJwt(String jwt) {
@@ -75,7 +70,7 @@ public class TenantFilter {
             if (parts.length > 1) {
                 String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
                 JsonObject json = new JsonObject(payload);
-                return json.getString("tenantId", "defaultTenant");
+                return json.getString("tenantid", "defaultTenant");
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to inject tenant ID: " + e.getMessage(), e);
