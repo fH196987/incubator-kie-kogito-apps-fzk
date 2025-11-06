@@ -36,7 +36,7 @@ public class RequestFilters {
                 JsonObject variables = body.getJsonObject("variables");
                 JsonObject where = variables.getJsonObject("where", new JsonObject());
                 JsonObject tenantObject = new JsonObject();
-                tenantObject.put("EQUALS", tenantId);
+                tenantObject.put("equal", tenantId);
                 where.put("tenantId", tenantObject);
                 variables.put("where", where);
                 body.put("variables", variables);
@@ -54,8 +54,16 @@ public class RequestFilters {
     private String extractTenantId(RoutingContext rc) {
         try {
             if (rc.user() instanceof QuarkusHttpUser) {
-                var token = rc.request().getHeader("Authorization");
-                return parseTenantIdFromJwt(token);
+                var token       = rc.request().getHeader("Authorization");
+                String tenantId = parseTenantIdFromJwt(token);
+
+                //TODO temp fix
+
+                if(tenantId != null && tenantId.contains(",")){
+                    tenantId = tenantId.split(",")[0];
+                }
+
+                return tenantId;
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to extract tenant ID: " + e.getMessage(), e);
