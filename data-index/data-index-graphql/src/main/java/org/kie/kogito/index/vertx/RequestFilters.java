@@ -15,6 +15,10 @@ public class RequestFilters {
 
     public void add(RoutingContext rc) {
 
+        if(System.getenv("KOGITO_DATA_INDEX_FILTERS") != null &&
+                System.getenv("KOGITO_DATA_INDEX_FILTERS").equalsIgnoreCase("disabled")){
+            return;
+        }
         logger.log(Level.FINE, "[TenantHandler] Handler triggered for path: "+ rc.request().path());
 
         try {
